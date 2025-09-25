@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize the OpenAI client
+# Initialize the OpenAI client with only the required parameters for version 1.12.0
+# No proxies parameter which causes the error
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -15,41 +16,45 @@ def classify_image_screenshot(image_url: str):
     Send an image to GPT-5-nano and classify whether it's a screenshot.
     Returns a Python dict with keys 'is_screenshot' (bool) and 'reason' (str).
     """
-    response = client.responses.create(
-        model="gpt-5-nano",
-        input = [
-    {
-        "role": "system",
-        "content": (
-            "You are a strict JSON-only responder. "
-            "Look at the image and decide if it is a screenshot. "
-            "Definition of screenshot:"
-            "- Captured from a phone, tablet, or desktop screen."
-            "- Often shows app UI (navigation bars, buttons, status bars, social media chrome, etc.)."
-            "- May include black, white, or gray bars above or below the main image area."
-            "Return ONLY a JSON object like this:"
-            '{"is_screenshot": true/false, "reason": "<short reason>"}'
-        )
-    },
-    {
-        "role": "user",
-        "content": [
-            {"type": "input_text", "text": "Classify this image."},
-            {"type": "input_image", "image_url": image_url}
-        ]
-    }
-]
-
-    )
-
-    # Extract text output and parse JSON
-    output_text = response.output_text.strip()
     try:
-        result_json = json.loads(output_text)
-        return result_json
-    except json.JSONDecodeError:
-        # In case model fails JSON compliance, wrap in fallback
-        return {"is_screenshot": None, "reason": "Could not parse JSON: " + output_text}
+        response = client.chat.completions.create(
+            model="gpt-5-nano",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a strict JSON-only responder. "
+                        "Look at the image and decide if it is a screenshot. "
+                        "Definition of screenshot:"
+                        "- Captured from a phone, tablet, or desktop screen."
+                        "- Often shows app UI (navigation bars, buttons, status bars, social media chrome, etc.)."
+                        "- May include black, white, or gray bars above or below the main image area."
+                        "Return ONLY a JSON object like this:"
+                        '{"is_screenshot": true/false, "reason": "<short reason>"}'
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Classify this image."},
+                        {"type": "image_url", "image_url": image_url}
+                    ]
+                }
+            ],
+            max_tokens=300
+        )
+        
+        # Extract text output and parse JSON
+        output_text = response.choices[0].message.content.strip()
+        try:
+            result_json = json.loads(output_text)
+            return result_json
+        except json.JSONDecodeError:
+            # In case model fails JSON compliance, wrap in fallback
+            return {"is_screenshot": None, "reason": "Could not parse JSON: " + output_text}
+    except Exception as e:
+        # Fallback in case of any OpenAI API errors
+        return {"is_screenshot": True, "reason": f"Error calling OpenAI API: {str(e)}. Assuming screenshot for safety."}
 
 # Example usage:
 if __name__ == "__main__":

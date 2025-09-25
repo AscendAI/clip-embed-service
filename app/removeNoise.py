@@ -218,5 +218,5 @@ test_url = "https://cdn.discordapp.com/attachments/1093165395466268743/142066983
 
 test_url1 = "https://cdn.discordapp.com/attachments/1093165395466268743/1420668169030467584/Screenshot_20250925-130753.png?ex=68d63bd6&is=68d4ea56&hm=e71666bf05808fc3eac1ccf69dffc46fd7a55039f9b877738d2eed7264320dc1&"
 
-run_remove_noise_on_url(test_url, "cropped_from_url.png")
-run_remove_noise_on_url(test_url1, "cropped_from_url.png")
+# run_remove_noise_on_url(test_url, "cropped_from_url.png")
+# run_remove_noise_on_url(test_url1, "cropped_from_url.png")
