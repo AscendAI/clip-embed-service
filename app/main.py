@@ -102,6 +102,13 @@ class RemoveNoiseResponse(BaseModel):
     cropped_size: List[int]
     success: bool
 
+class ScreenshotClassificationRequest(BaseModel):
+    image_url: str = Field(..., description="URL of the image to classify")
+    
+class ScreenshotClassificationResponse(BaseModel):
+    is_screenshot: bool = Field(None, description="Whether the image is a screenshot")
+    reason: str = Field(None, description="Reason for the classification")
+
 @app.get("/health")
 def health():
     return {
@@ -167,4 +174,18 @@ def remove_noise(req: RemoveNoiseRequest):
         }
     except Exception as e:
         log.error(f"Error processing image: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/classify-screenshot", response_model=ScreenshotClassificationResponse)
+def classify_screenshot(req: ScreenshotClassificationRequest):
+    try:
+        # Import the classify_image_screenshot function from screenShotDecider
+        from app.screenShotDecider import classify_image_screenshot
+        
+        # Call the function with the provided image URL
+        result = classify_image_screenshot(req.image_url)
+        
+        return result
+    except Exception as e:
+        log.error(f"Error classifying screenshot: {e}")
         raise HTTPException(status_code=400, detail=str(e))
