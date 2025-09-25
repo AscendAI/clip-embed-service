@@ -1,5 +1,6 @@
 import io, os, base64, logging
 from typing import List
+import uuid
 
 import numpy as np
 import requests
@@ -11,6 +12,9 @@ from dotenv import load_dotenv
 import open_clip
 import torch
 import torch.nn.functional as F
+
+# Import removeNoise module for image noise removal
+from app.removeNoise import run_remove_noise_on_url, extract_main_image
 
 load_dotenv()
 
@@ -88,6 +92,16 @@ class EmbedImageRequest(BaseModel):
 class EmbedTextRequest(BaseModel):
     inputs: List[str] = Field(..., min_items=1, max_items=MAX_BATCH)
 
+class RemoveNoiseRequest(BaseModel):
+    url: str = Field(..., description="URL of the image to process")
+    output_filename: str = Field(None, description="Optional custom filename for the output image")
+
+class RemoveNoiseResponse(BaseModel):
+    original_url: str
+    output_path: str
+    cropped_size: List[int]
+    success: bool
+
 @app.get("/health")
 def health():
     return {
@@ -127,3 +141,30 @@ def embed_text(req: EmbedTextRequest):
         "count": int(embs.shape[0]),
         "embeddings": embs.tolist(),
     }
+
+@app.post("/remove-noise", response_model=RemoveNoiseResponse)
+def remove_noise(req: RemoveNoiseRequest):
+    try:
+        # Generate unique filename if not provided
+        output_filename = req.output_filename
+        if not output_filename:
+            output_filename = f"cropped_{uuid.uuid4().hex[:8]}.png"
+        
+        # Ensure the output path is in the current directory
+        output_path = os.path.join(os.getcwd(), output_filename)
+        
+        # Process the image
+        run_remove_noise_on_url(req.url, output_path)
+        
+        # Get the cropped image size
+        img = Image.open(output_path)
+        
+        return {
+            "original_url": req.url,
+            "output_path": output_path,
+            "cropped_size": list(img.size),
+            "success": True
+        }
+    except Exception as e:
+        log.error(f"Error processing image: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
