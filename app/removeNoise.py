@@ -189,15 +189,27 @@ def extract_main_image(pil_img: Image.Image, pad: int = 8) -> Image.Image:
 
     return Image.fromarray(crop)
 
-def run_remove_noise_on_url(url: str, save_as: str = "cropped.png"):
-    """Fetch image by URL, show before/after, and save output."""
+def run_remove_noise_on_url(url: str, save_as: str = None):
+    """
+    Fetch image by URL, process it to remove noise, and either save to disk or return the processed image.
+    
+    Args:
+        url: The URL of the image to process
+        save_as: Optional path to save the image. If None, the image is not saved to disk.
+        
+    Returns:
+        PIL.Image.Image: The processed image object
+    """
     img = load_image(url)
     cropped = extract_main_image(img)
     print("→ Cropped size:", cropped.size)
-    # display(img)  # Commented out - requires Jupyter/IPython display
-    # display(cropped)  # Commented out - requires Jupyter/IPython display
-    cropped.save(save_as)
-    print(f"Saved: {save_as}")
+    
+    # Save to disk only if save_as is provided
+    if save_as:
+        cropped.save(save_as)
+        print(f"Saved: {save_as}")
+        
+    return cropped
 # Paste any screenshot URL (Facebook/IG/Twitter/Shop link etc.)
 
 

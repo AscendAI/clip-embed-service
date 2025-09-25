@@ -108,6 +108,16 @@ class ScreenshotClassificationRequest(BaseModel):
 class ScreenshotClassificationResponse(BaseModel):
     is_screenshot: bool = Field(None, description="Whether the image is a screenshot")
     reason: str = Field(None, description="Reason for the classification")
+    
+class ProcessImageRequest(BaseModel):
+    image_url: str = Field(..., description="URL of the image to process")
+    
+class ProcessImageResponse(BaseModel):
+    is_screenshot: bool = Field(None, description="Whether the image is a screenshot")
+    reason: str = Field(None, description="Reason for the classification")
+    processed: bool = Field(False, description="Whether noise removal was performed")
+    output_path: str = Field(None, description="Path to the processed image if applicable")
+    embeddings: List[float] = Field(None, description="Image embeddings")
 
 @app.get("/health")
 def health():
@@ -188,4 +198,41 @@ def classify_screenshot(req: ScreenshotClassificationRequest):
         return result
     except Exception as e:
         log.error(f"Error classifying screenshot: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+        
+@app.post("/process-image", response_model=ProcessImageResponse)
+def process_image(req: ProcessImageRequest):
+    try:
+        # Step 1: Check if the image is a screenshot
+        from app.screenShotDecider import classify_image_screenshot
+        screenshot_result = classify_image_screenshot(req.image_url)
+        
+        response = ProcessImageResponse(
+            is_screenshot=screenshot_result.get("is_screenshot"),
+            reason=screenshot_result.get("reason")
+        )
+        
+        # Step 2: If it's a screenshot, run noise removal
+        if screenshot_result.get("is_screenshot"):
+
+            print("It is a screenshot.")
+            # Process the image to remove noise without saving to disk
+            processed_img = run_remove_noise_on_url(req.image_url)
+            
+            response.processed = True
+
+            print("")
+            
+            # Step 3: Generate embeddings for the processed image
+            embs = embed_images([processed_img])
+            response.embeddings = embs[0].tolist()
+        else:
+            # If not a screenshot, generate embeddings for the original image
+            original_img = _load_image(req.image_url)
+            embs = embed_images([original_img])
+            response.embeddings = embs[0].tolist()
+        
+        return response
+    except Exception as e:
+        log.error(f"Error processing image: {e}")
         raise HTTPException(status_code=400, detail=str(e))
