@@ -18,7 +18,7 @@ def classify_image_screenshot(image_url: str):
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-5-nano",
+            model="gpt-5-nano", # Using available model in OpenAI 1.12.0
             messages=[
                 {
                     "role": "system",
