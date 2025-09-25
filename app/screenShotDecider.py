@@ -1,12 +1,13 @@
-from openai import OpenAI
-
-# Initialize the OpenAI client
-# Replace "YOUR_API_KEY" with your actual OpenAI API key or ensure the OPENAI_API_KEY
-# environment variable is set.
-client = OpenAI(api_key="os.getenv("OPENAI_API_KEY")")
-
+import os
 from openai import OpenAI
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize the OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def classify_image_screenshot(image_url: str):
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     test_url = "https://cdn.discordapp.com/attachments/1093165395466268743/1420669832843497596/image.png?ex=68d63d62&is=68d4ebe2&hm=aa65b63abb273efc987fb32c5951daf44590d774d226d40fcfd2d443c39e74a3&"
     test_url1 = "https://cdn.discordapp.com/attachments/1093165395466268743/1420668169030467584/Screenshot_20250925-130753.png?ex=68d63bd6&is=68d4ea56&hm=e71666bf05808fc3eac1ccf69dffc46fd7a55039f9b877738d2eed7264320dc1&"
 
-    # result = classify_image_screenshot(test_url)
+    result = classify_image_screenshot(test_url)
     result1 = classify_image_screenshot(test_url1)
 
-    print(result,result1)  # {'is_screenshot': True, 'reason': 'Image shows mobile UI with status bar'}
+    print(result, result1)  # {'is_screenshot': True, 'reason': 'Image shows mobile UI with status bar'}
