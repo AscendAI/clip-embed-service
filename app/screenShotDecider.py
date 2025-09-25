@@ -20,7 +20,7 @@ def classify_image_screenshot(image_url: str):
         # Create a fresh client each time to avoid any issues with proxies
         client = get_openai_client()
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview", # Using available model in OpenAI 1.12.0
+            model="gpt-5-nano", # Using available model in OpenAI 1.12.0
             messages=[
                 {
                     "role": "system",
