@@ -39,11 +39,11 @@ def classify_image_screenshot(image_url: str):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": "Classify this image."},
-                        {"type": "image_url", "image_url": image_url}
+                        {"type": "image_url", "image_url": {"url": image_url}}
                     ]
                 }
             ],
-            max_tokens=300
+            max_completion_tokens=300
         )
         
         # Extract text output and parse JSON
