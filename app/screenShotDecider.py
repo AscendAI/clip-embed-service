@@ -1,24 +1,26 @@
 import os
-from openai import OpenAI
 import json
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize the OpenAI client with only the required parameters for version 1.12.0
-# No proxies parameter which causes the error
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# We'll create the OpenAI client only when needed to avoid any initialization issues
+def get_openai_client():
+    from openai import OpenAI
+    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def classify_image_screenshot(image_url: str):
     """
-    Send an image to GPT-5-nano and classify whether it's a screenshot.
+    Send an image to GPT-4-vision-preview and classify whether it's a screenshot.
     Returns a Python dict with keys 'is_screenshot' (bool) and 'reason' (str).
     """
     try:
+        # Create a fresh client each time to avoid any issues with proxies
+        client = get_openai_client()
         response = client.chat.completions.create(
-            model="gpt-5-nano", # Using available model in OpenAI 1.12.0
+            model="gpt-4-vision-preview", # Using available model in OpenAI 1.12.0
             messages=[
                 {
                     "role": "system",
