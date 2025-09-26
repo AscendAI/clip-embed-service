@@ -1,6 +1,10 @@
 import os
 import json
+import base64
+import requests
+import io
 from dotenv import load_dotenv
+from PIL import Image
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,13 +14,47 @@ def get_openai_client():
     from openai import OpenAI
     return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def fetch_image_as_base64(image_url: str) -> str:
+    """
+    Fetch an image from URL and convert it to base64 data URI.
+    Returns a data URI string like: data:image/jpeg;base64,/9j/4AAQ...
+    """
+    try:
+        # Add headers to avoid being blocked by CDNs
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        
+        # Fetch the image
+        response = requests.get(image_url, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        # Open and convert to RGB to ensure compatibility
+        image = Image.open(io.BytesIO(response.content))
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Convert to base64
+        buffer = io.BytesIO()
+        image.save(buffer, format='JPEG', quality=85)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        # Return as data URI
+        return f"data:image/jpeg;base64,{image_base64}"
+        
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch and convert image: {str(e)}")
 
 def classify_image_screenshot(image_url: str):
     """
     Send an image to GPT-4-vision-preview and classify whether it's a screenshot.
+    Fetches the image from URL, converts to base64, and sends to OpenAI.
     Returns a Python dict with keys 'is_screenshot' (bool) and 'reason' (str).
     """
     try:
+        # Fetch image and convert to base64
+        image_data_uri = fetch_image_as_base64(image_url)
+        
         # Create a fresh client each time to avoid any issues with proxies
         client = get_openai_client()
         response = client.chat.completions.create(
@@ -39,7 +77,7 @@ def classify_image_screenshot(image_url: str):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": "Classify this image."},
-                        {"type": "image_url", "image_url": {"url": image_url}}
+                        {"type": "image_url", "image_url": {"url": image_data_uri}}
                     ]
                 }
             ],
