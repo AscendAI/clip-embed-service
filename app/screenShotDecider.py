@@ -91,7 +91,7 @@ def classify_image_screenshot(image_url: str):
             return result_json
         except json.JSONDecodeError:
             # In case model fails JSON compliance, wrap in fallback
-            return {"is_screenshot": None, "reason": "Could not parse JSON: " + output_text}
+            return {"is_screenshot": False, "reason": "Could not parse JSON: " + output_text}
     except Exception as e:
         # Fallback in case of any OpenAI API errors
         return {"is_screenshot": False, "reason": f"Error calling OpenAI API: {str(e)}. Assuming not screenshot for safety."}
