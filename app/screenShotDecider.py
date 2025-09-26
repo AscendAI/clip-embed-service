@@ -56,7 +56,7 @@ def classify_image_screenshot(image_url: str):
             return {"is_screenshot": None, "reason": "Could not parse JSON: " + output_text}
     except Exception as e:
         # Fallback in case of any OpenAI API errors
-        return {"is_screenshot": True, "reason": f"Error calling OpenAI API: {str(e)}. Assuming screenshot for safety."}
+        return {"is_screenshot": False, "reason": f"Error calling OpenAI API: {str(e)}. Assuming not screenshot for safety."}
 
 # Example usage:
 if __name__ == "__main__":
