@@ -1,5 +1,5 @@
 import io, os, base64, logging
-from typing import List
+from typing import List, Optional
 import uuid
 
 import numpy as np
@@ -113,11 +113,11 @@ class ProcessImageRequest(BaseModel):
     image_url: str = Field(..., description="URL of the image to process")
     
 class ProcessImageResponse(BaseModel):
-    is_screenshot: bool = Field(None, description="Whether the image is a screenshot")
-    reason: str = Field(None, description="Reason for the classification")
+    is_screenshot: Optional[bool] = Field(None, description="Whether the image is a screenshot")
+    reason: Optional[str] = Field(None, description="Reason for the classification")
     processed: bool = Field(False, description="Whether noise removal was performed")
-    output_path: str = Field(None, description="Path to the processed image if applicable")
-    embeddings: List[float] = Field(None, description="Image embeddings")
+    output_path: Optional[str] = Field(None, description="Path to the processed image if applicable")
+    embeddings: Optional[List[float]] = Field(None, description="Image embeddings")
 
 @app.get("/health")
 def health():

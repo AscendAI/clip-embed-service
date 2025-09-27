@@ -47,13 +47,15 @@ def fetch_image_as_base64(image_url: str) -> str:
 
 def classify_image_screenshot(image_url: str):
     """
-    Send an image to GPT-4-vision-preview and classify whether it's a screenshot.
+    Send an image to gpt-5-nano and classify whether it's a screenshot.
     Fetches the image from URL, converts to base64, and sends to OpenAI.
     Returns a Python dict with keys 'is_screenshot' (bool) and 'reason' (str).
     """
     try:
         # Fetch image and convert to base64
         image_data_uri = fetch_image_as_base64(image_url)
+
+        print("image_data_uri",image_data_uri)
         
         # Create a fresh client each time to avoid any issues with proxies
         client = get_openai_client()
@@ -81,8 +83,10 @@ def classify_image_screenshot(image_url: str):
                     ]
                 }
             ],
-            max_completion_tokens=300
+
         )
+
+        print("open ai response",response)
         
         # Extract text output and parse JSON
         output_text = response.choices[0].message.content.strip()
